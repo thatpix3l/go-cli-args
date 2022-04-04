@@ -34,15 +34,15 @@ func colorize(msg_color string, msg string) string {
 }
 
 // Beginning of actual program after loading and parsing config files
-func Start(c *config.Config) {
+func Start(c config.Config) {
 
 	name := "Joe"
-	if *c.UseColor {
+	if c.UseColor {
 		name = colorize(color.red, name)
 	}
 	fmt.Println(name)
 
-	if *c.ShowFunny {
+	if c.ShowFunny {
 		fmt.Println("LMAO, IMAGINE")
 	}
 

@@ -10,6 +10,6 @@ func main() {
 
 	var config config.Config
 	cmd.GenerateConfig(&config)
-	app.Start(&config)
+	app.Start(config)
 
 }

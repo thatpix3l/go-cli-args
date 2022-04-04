@@ -1,7 +1,7 @@
 package config
 
 type Config struct {
-	UseColor   *bool
-	ShowFunny  *bool
+	UseColor   bool
+	ShowFunny  bool
 	CoolString string
 }

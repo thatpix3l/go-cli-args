@@ -31,7 +31,7 @@ var (
 // storing them into the given *config.Config struct
 func GenerateConfig(cfg *config.Config) {
 
-	// Viper config
+	// New variable of type *viper.Viper that stores and merges file configs (includes env vars)
 	v := viper.New()
 
 	// Base command of actual program
@@ -41,11 +41,13 @@ func GenerateConfig(cfg *config.Config) {
 		Long:  `I literally have no idea what I'm doing, just go along with it`,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			// On each rootCmd flag, if it is not the config flag, bind it to viper equivalent key
+			// On each rootCmd flag, if the flag is not "config", bind it to viper equivalent key
 			cmd.Flags().VisitAll(func(f *pflag.Flag) {
 				if f.Name != "config" {
 
-					// Bind current flag name to environment variable equivalent
+					// Create an env var key named the same as flag, e.g. "foo-bar". The env var key is for accessing by code.
+					// Take same env var key name, and normalize it to env var naming specification, e.g. "FOO_BAR",
+					// so when assigning FOO_BAR=baz, it maps to foo-bar
 					envKey := envPrefix + "_" + strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))
 					v.BindEnv(f.Name, envKey)
 
@@ -60,19 +62,21 @@ func GenerateConfig(cfg *config.Config) {
 			})
 		},
 	}
-	// Here, we start defining a load of flags and stuff
 
-	// The config file path used for loading, the default
+	// Here, we start defining a load of flags
+
+	// Config is a special case. We only want it to be configurable from the command line, not from other configs.
 	cfgFilePath := *rootCmd.Flags().StringP("config", "c", cfgPathNoExt+".json", "Path to a config file. Supported types are {json,yaml}")
+
+	// These are flags that can be changed from configs
 	rootCmd.Flags().BoolVarP(&cfg.UseColor, "use-color", "u", false, "Display colorized ouput")
 	rootCmd.Flags().BoolVarP(&cfg.ShowFunny, "show-funny", "s", false, "Show the funny thing :D")
 	rootCmd.Flags().StringVar(&cfg.CoolString, "cool-string", "bruh", "A cool string to show")
 
 	rootCmd.Execute()
 
-	v.SetConfigFile(cfgFilePath)
-	v.SetEnvPrefix(envPrefix)
-	v.ReadInConfig()
-	v.BindPFlags(pflag.CommandLine)
+	v.SetConfigFile(cfgFilePath) // Config file path to load
+	v.SetEnvPrefix(envPrefix)    // Prefix for all environment variables
+	v.ReadInConfig()             // Load config file
 
 }

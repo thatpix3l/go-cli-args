@@ -16,6 +16,7 @@ type color_struct struct {
 }
 
 var (
+	// Useful color codes
 	color = color_struct{
 		black:  "\u001b[30m",
 		red:    "\u001b[31m",

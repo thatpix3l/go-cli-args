@@ -46,4 +46,6 @@ func Start(c *config.Config) {
 		fmt.Println("LMAO, IMAGINE")
 	}
 
+	fmt.Printf("%s\n", c.CoolString)
+
 }

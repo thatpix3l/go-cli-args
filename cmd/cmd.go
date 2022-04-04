@@ -1,60 +1,50 @@
 package cmd
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"log"
-	"os"
+	"fmt"
 	"path"
 
 	"github.com/adrg/xdg"
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+
 	"github.com/thatpix3l/args/config"
 )
 
-// Load a config file when given valid string path.
-func loadFileConfig(cfg_path string, cfg *config.Config) {
+const (
+	cfgBasename = "butter"
+	envPrefix   = "BUTTER"
+)
 
-	jsonFile, _ := os.Open(cfg_path)
-	defer jsonFile.Close()
+var (
+	cfgDirPath            = path.Join(xdg.ConfigHome, "cli_args")
+	cfgFilePathWithoutExt = path.Join(cfgDirPath, cfgBasename)
+)
 
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, cfg)
+// GenerateConfig loads and parses config files from different sources,
+// parses them, and finally merges them together with a specific order precedence,
+// storing them into the given *config.Config struct
+func GenerateConfig(cfg *config.Config) {
 
-}
-
-// Merge modified values between a source config and destination config
-func mergeConfigs(src_cfg *config.Config, dest_cfg *config.Config) {
-
-	if cli_arg_bytes, err := json.Marshal(&src_cfg); err == nil {
-
-		json.Unmarshal(cli_arg_bytes, &dest_cfg)
-
-	} else {
-
-		log.Fatal(err)
-
+	rootCmd := &cobra.Command{
+		Use:   "cli_args",
+		Short: "Program to test cli args",
+		Long:  `I literally have no idea what I'm doing, just go along with it`,
 	}
-}
 
-func GenerateConfig() config.Config {
+	cfgFilePath := *rootCmd.Flags().StringP("config", "c", cfgFilePathWithoutExt, "Path to a config file. Supported types are {json,yaml}")
+	rootCmd.Flags().BoolP("use-color", "u", false, "Display colorized ouput")
+	rootCmd.Flags().BoolP("show-funny", "s", false, "Show the funny thing :D")
+	rootCmd.Flags().String("cool-string", "bruh", "A cool string to show")
 
-	// Process command-line arguments
+	rootCmd.Execute()
 
-	var cmd_args_cfg config.Config
-	cmd_args_cfg.UseColor = pflag.Bool("colorize", false, "Display colorized output")
-	cmd_args_cfg.ShowFunny = pflag.Bool("show-funny", false, "Show the funny thing :D")
+	v := viper.New()
+	v.SetConfigFile(cfgFilePath)
+	v.ReadInConfig()
+	v.BindPFlags(pflag.CommandLine)
 
-	cfg_path := pflag.StringP("config", "c", path.Join(xdg.ConfigHome, "cli_args/config.json"), "Path to a valid JSON config file")
-
-	pflag.Parse()
-
-	// Load and merge different sources of configs
-
-	var main_cfg config.Config
-	loadFileConfig(*cfg_path, &main_cfg)
-	mergeConfigs(&cmd_args_cfg, &main_cfg)
-
-	return main_cfg
+	fmt.Printf("%s\n", v.Get("use-color"))
 
 }
